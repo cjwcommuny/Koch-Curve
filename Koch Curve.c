@@ -8,15 +8,6 @@
 
 #define DEFAULT_ORDER 3
 
-struct Point {
-    double x;
-    double y;
-};
-struct curveADT {
-    struct Point point_collection[1500];
-    int point_num;
-};
-
 void TimerEventProcess(int timerID);
 void GetInfo(void);
 void DrawCurve(void);
@@ -31,8 +22,6 @@ extern double CurrentAngle;
 
 void Main()
 {
-    //curve = GetBlock(sizeof(struct curveADT));
-
     SetWindowTitle("Koch Curve Program");
     InitGraphics();
     GetInfo();
