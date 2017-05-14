@@ -7,26 +7,38 @@
 #include "newgraph.h"
 
 #define DEFAULT_ORDER 3
+#define SIZE_FACTOR 0.1
+#define TIMER_ID 1
+#define TIME_INTERVAL 1000
 
 struct Point {
     double x;
     double y;
 };
 
+typedef enum {
+    ZOOM_IN,
+    ZOOM_OUT
+} zoom_type;
+
 void TimerEventProcess(int timerID);
 void MouseEventProcess(int x, int y, int button, int event);
 
 void GetInfo(void);
-void DrawCurve(void);
-void DrawForward(int *order);
-void InitCurvePosition(void);
+void DrawCurve(int *order_in_use, int order);
+void DrawForward(int *order_in_use, int order);
+void InitCurvePosition(int *order_in_use, int order);
 void RefreshDisplay(void);
 void rotate(void);
+void zoom(void);
 
 static bool isRightMouseDown;
+static ZoomType;
 static struct Point CurrentPoint, PreviousPoint, CenterPoint;
 static int Order;
 static int *order_in_use;
+static int EvolutionCount;
+static int *EvolutionCount_in_use;
 static double EdgeLength = 3.00;
 struct curveADT *curve;
 static double angle = 0;
@@ -44,6 +56,7 @@ void Main()
     //DrawCurve();
     registerMouseEvent(MouseEventProcess);
 	registerTimerEvent(TimerEventProcess);
+    startTimer(TIMER_ID, TIME_INTERVAL);
 }
 
 void GetInfo(void)
@@ -51,6 +64,7 @@ void GetInfo(void)
     //char temp;
 
     order_in_use = GetBlock(sizeof(int));
+    EvolutionCount_in_use = GetBlock(sizeof(int));
 
     InitConsole();
     printf("Input the order of Koch Curve:\n");
@@ -59,26 +73,27 @@ void GetInfo(void)
     //*order_in_use = Order;
     printf("Input the edge length of the original curve:\n");
     scanf("%lf", &EdgeLength);
-    DrawCurve();
+    *EvolutionCount_in_use = EvolutionCount = 1;
+    //DrawCurve(order_in_use, Order);
     //printf("length:%f\n", EdgeLength);
     //printf("Let's draw!\n");
     //FreeConsole();
 }
 
-void DrawCurve(void)
+void DrawCurve(int *order_in_use, int order)
 {
-    InitCurvePosition();
-    //printf("TEST:%d, %d, %f\n", Order, *order_in_use, EdgeLength);
-    DrawForward(order_in_use);
+    InitCurvePosition(order_in_use, order);
+    //printf("TEST:%d, %d, %f\n", order, *order_in_use, EdgeLength);
+    DrawForward(order_in_use, order);
     turn(-2*pi/3);
-    *order_in_use = Order;
-    DrawForward(order_in_use);
+    *order_in_use = order;
+    DrawForward(order_in_use, order);
     turn(-2*pi/3);
-    *order_in_use = Order;
-    DrawForward(order_in_use);
+    *order_in_use = order;
+    DrawForward(order_in_use, order);
 }
 
-void InitCurvePosition(void)
+void InitCurvePosition(int *order_in_use, int order)
 {
     double x0;// = GetWindowWidth() / 2 - EdgeLength / 2;
     double y0;// = GetWindowHeight() / 2 - EdgeLength / 2 / 1.732; //sqrt(3)
@@ -89,32 +104,32 @@ void InitCurvePosition(void)
     x0 = CenterPoint.x - radius * cos(angle + pi/6);
     y0 = CenterPoint.y - radius * sin(angle + pi/6);
     CurrentAngle = angle + pi/3;
-    *order_in_use = Order;
+    *order_in_use = order;
     MovePen(x0, y0);
     //printf("%f, %f; %f, %f; %f, %f\n", CenterPoint.x, CenterPoint.y, x0, y0, CurrentAngle, angle);
 }
 
-void DrawForward(int *order)
+void DrawForward(int *order_in_use, int order)
 {
     int temp;
 
-    if (*order == 0) {
-        forward(EdgeLength / pow(3, Order));
+    if (*order_in_use == 0) {
+        forward(EdgeLength / pow(3, order));
         //printf("finish\n");
     } else {
         //printf("here\n");
-        (*order)--;
-        temp = *order;
-        DrawForward(order);
+        (*order_in_use)--;
+        temp = *order_in_use;
+        DrawForward(order_in_use, order);
         turn(pi/3);
-        *order = temp;
-        DrawForward(order);
+        *order_in_use = temp;
+        DrawForward(order_in_use, order);
         turn(-2*pi/3);
-        *order = temp;
-        DrawForward(order);
+        *order_in_use = temp;
+        DrawForward(order_in_use, order);
         turn(pi/3);
-        *order = temp;
-        DrawForward(order);
+        *order_in_use = temp;
+        DrawForward(order_in_use, order);
     }
 }
 
@@ -152,15 +167,27 @@ void MouseEventProcess(int x, int y, int button, int event)
             }
             break;
         case ROLL_UP:
+            ZoomType = ZOOM_OUT;
+            zoom();
             break;
         case ROLL_DOWN:
+            ZoomType = ZOOM_IN;
+            zoom();
             break;
     }
 }
 
 void TimerEventProcess(int timerID)
 {
-
+    switch (timerID) {
+        case TIMER_ID:
+            printf("here\n");
+            ClearWindow();
+            DrawCurve(EvolutionCount_in_use, EvolutionCount);
+            if (EvolutionCount++ < Order);
+            else cancelTimer(TIMER_ID);
+            break;
+    }
 }
 
 void RefreshDisplay(void)
@@ -204,5 +231,16 @@ void rotate(void)
     //CurrentAngle = pi/3 + angle;
     //RefreshDisplay();
     ClearWindow();
-    DrawCurve();
+    DrawCurve(order_in_use, Order);
+}
+
+void zoom(void)
+{
+    if (ZoomType == ZOOM_IN) {
+        EdgeLength *= 1 - SIZE_FACTOR;
+    } else {
+        EdgeLength *= 1 + SIZE_FACTOR;
+    }
+    ClearWindow();
+    DrawCurve(order_in_use, Order);
 }
