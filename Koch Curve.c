@@ -5,17 +5,15 @@
 #include <stdlib.h>
 #include <math.h>
 #include "newgraph.h"
+//#include "windowobj.h"
 
 #define DEFAULT_ORDER 3
 #define SIZE_FACTOR 0.1
 #define TIMER_ID 1
 #define TIME_INTERVAL 1000
 
-struct Point {
-    double x;
-    double y;
-};
 
+//#define TEXT_WINDOW_INFO 
 typedef enum {
     ZOOM_IN,
     ZOOM_OUT
@@ -28,7 +26,6 @@ void GetInfo(void);
 void DrawCurve(int *order_in_use, int order);
 void DrawForward(int *order_in_use, int order);
 void InitCurvePosition(int *order_in_use, int order);
-void RefreshDisplay(void);
 void rotate(void);
 void zoom(void);
 
@@ -190,25 +187,7 @@ void TimerEventProcess(int timerID)
     }
 }
 
-void RefreshDisplay(void)
-{
-    //printf("here\n");
-    SetEraseMode(TRUE);
-    StartFilledRegion(1);
-    DrawRectangle(0, 0, GetWindowWidth(), GetWindowHeight()); 
-    EndFilledRegion();
-    MovePen(CurrentPoint.x, CurrentPoint.y);
-    SetEraseMode(FALSE);
-}
 
-void DrawRectangle(double x, double y, double width, double height)
-{
-    MovePen(x, y);
-    DrawLine(width, 0);
-    DrawLine(0, height);
-    DrawLine(-width, 0);
-    DrawLine(0, -height);
-}
 
 void rotate(void)
 {
